@@ -128,6 +128,30 @@ make build
 
 ---
 
+## 🍎 macOS Gatekeeper (Quarantine) Fix
+
+When downloading the macOS binary (`http-loadgen_darwin_arm64` or `http-loadgen_darwin_amd64`), macOS may block it with this error:
+
+```
+
+"http-loadgen" cannot be opened because the developer cannot be verified.
+
+````
+
+To fix it:
+
+```bash
+xattr -d com.apple.quarantine ./http-loadgen_darwin_arm64
+chmod +x ./http-loadgen_darwin_arm64
+./http-loadgen_darwin_arm64 --help
+````
+
+Alternatively, allow the app manually via:
+
+>  System Settings → Privacy & Security → Allow Anyway
+
+---
+
 ## 🐳 Docker Usage
 
 Build the image locally:
