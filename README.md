@@ -3,6 +3,7 @@
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 ![Version](https://img.shields.io/badge/version-v0.1.0-blue)
 ![Go Version](https://img.shields.io/badge/go-1.24-blue)
+![Docker Pulls](https://img.shields.io/docker/pulls/virag/http-loadgen)
 ![License](https://img.shields.io/badge/license-MIT-yellow)
 
 ![http-loadgen banner](http-loadgen.png)

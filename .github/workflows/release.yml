@@ -24,12 +24,6 @@ jobs:
         with:
           go-version: '1.24'
 
-      - name: 🐳 Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
       - name: 🔧 Install GoReleaser v2.10.2
         run: |
           curl -sSfL https://github.com/goreleaser/goreleaser/releases/download/v2.10.2/goreleaser_Linux_x86_64.tar.gz | tar -xz -C /usr/local/bin goreleaser
@@ -41,5 +35,3 @@ jobs:
         run: goreleaser release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
-          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
