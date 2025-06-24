@@ -27,7 +27,7 @@ jobs:
       - name: 🔧 Install GoReleaser
         uses: goreleaser/goreleaser-action@v5
         with:
-          version: latest
+          version: 2.10.2
           install-only: true
 
       - name: 🐳 Log in to Docker Hub
