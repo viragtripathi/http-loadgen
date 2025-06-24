@@ -1,10 +1,9 @@
 # http-loadgen
 
-![Status](https://img.shields.io/badge/status-stable-brightgreen)
-![Version](https://img.shields.io/badge/version-v0.1.0-blue)
+![Latest Release](https://img.shields.io/github/v/release/viragtripathi/http-loadgen)
+![Build](https://github.com/viragtripathi/http-loadgen/actions/workflows/release.yml/badge.svg)
 ![Go Version](https://img.shields.io/badge/go-1.24-blue)
-![Docker Pulls](https://img.shields.io/docker/pulls/virag/http-loadgen)
-![License](https://img.shields.io/badge/license-MIT-yellow)
+![License](https://img.shields.io/github/license/viragtripathi/http-loadgen)
 
 ![http-loadgen banner](http-loadgen.png)
 
