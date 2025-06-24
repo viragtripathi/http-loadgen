@@ -27,14 +27,11 @@ archives:
       - haproxy/haproxy.cfg
       - prometheus/**
 
-dockers:
-  - image_templates:
-      - "virag/http-loadgen:latest"
-      - "virag/http-loadgen:{{ .Tag }}"
-    dockerfile: ./Dockerfile
-    extra_files:
-      - api/**
-      - config/**
+#dockers:
+#  - image_templates:
+#      - "virag/http-loadgen:latest"
+#      - "virag/http-loadgen:{{ .Tag }}"
+#    dockerfile: ./Dockerfile
 
 checksum:
   name_template: "checksums.txt"
