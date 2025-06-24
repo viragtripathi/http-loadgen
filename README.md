@@ -125,10 +125,50 @@ cmd/              # CLI entrypoint (main.go)
 make build
 ```
 
-Or build via Docker:
+---
+
+## 🐳 Docker Usage
+
+Build the image locally:
 
 ```bash
 docker build -t http-loadgen:latest .
+```
+
+---
+
+### 🚀 Run with built-in config (zero setup)
+
+```bash
+docker run --rm virag/http-loadgen:latest \
+  --workload-config=/app/config/config.yaml \
+  --log-file=/app/run.log
+```
+
+✅ This works out of the box because the default config is baked into the image at `/app/config/config.yaml`.
+
+---
+
+### ⚙️ Override config from local machine
+
+```bash
+docker run --rm \
+  -v $(pwd)/config:/app/config \
+  virag/http-loadgen:latest \
+  --workload-config=/app/config/custom.yaml \
+  --log-file=/app/run.log
+```
+
+✅ This mounts your local `config/` folder into the container, replacing the default.
+
+---
+
+### 🧪 Use dry-run mode to test
+
+```bash
+docker run --rm virag/http-loadgen:latest \
+  --workload-config=/app/config/config.yaml \
+  --dry-run
 ```
 
 ---
