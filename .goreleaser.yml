@@ -1,14 +1,5 @@
 version: 2
 
-before:
-  hooks:
-    - mkdir -p .goreleaser-docker
-    - cp -r config .goreleaser-docker/
-    - cp -r api .goreleaser-docker/
-    - cp Dockerfile .goreleaser-docker/
-    - cp -r cmd .goreleaser-docker/
-    - cp go.mod go.sum .goreleaser-docker/
-
 builds:
   - id: default
     main: ./cmd/main.go
@@ -35,13 +26,6 @@ archives:
       - docker-compose.override.yml
       - haproxy/haproxy.cfg
       - prometheus/**
-
-dockers:
-  - image_templates:
-      - "virag/http-loadgen:latest"
-      - "virag/http-loadgen:{{ .Tag }}"
-    dockerfile: .goreleaser-docker/Dockerfile
-    use: buildx
 
 checksum:
   name_template: "checksums.txt"
