@@ -36,6 +36,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: 🚀 Run GoReleaser
-        run: goreleaser release --clean
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
