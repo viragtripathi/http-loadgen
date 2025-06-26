@@ -14,7 +14,5 @@ FROM alpine:3.19
 
 WORKDIR /app
 COPY --from=builder /app/http-loadgen /app/http-loadgen
-COPY config /app/config
-COPY api /app/api
 
 ENTRYPOINT ["/app/http-loadgen"]

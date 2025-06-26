@@ -1,0 +1,31 @@
+api:
+  write_api: "http://localhost:8585"
+  read_api: "http://localhost:8585"
+
+requests:
+  write:
+    method: POST
+    url: "{{ .WriteAPI }}/write"
+    headers:
+      Content-Type: application/json
+    body: |
+      { "id": "{{ call .uuid }}" }
+
+  read:
+    method: POST
+    url: "{{ .ReadAPI }}/read"
+    headers:
+      Content-Type: application/json
+    body: |
+      { "object": "{{ .object }}", "subject": "{{ .subject }}" }
+
+workload:
+  concurrency: 5
+  checks_per_second: 100
+  read_ratio: 10
+  duration_sec: 30
+  max_retries: 2
+  retry_delay_ms: 100
+  request_timeout_sec: 5
+  max_open_conns: 50
+  max_idle_conns: 50

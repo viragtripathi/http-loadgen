@@ -29,9 +29,20 @@ test-ci:
 test-integration:
 	go test -v -tags=integration ./...
 
-# Benchmark
-bench:
-	./scripts/run.sh --benchmark
+run-fake:
+	@echo "🛑 Killing old fake API if running..."
+	@pkill -f "samples/fakeapi/main.go" || true
+	@sleep 1
+	@echo "🐛 Starting fake API..."
+	@FAKEAPI_PORT=8585 go run samples/fakeapi/main.go &
+	@sleep 2
+	@echo "🚀 Running http-loadgen against fake API..."
+	@./http-loadgen \
+		--workload-config=samples/fakeapi/config/config.yaml \
+		--log-file=run.log \
+		--verbose=true
+	@echo "🧼 Cleaning up..."
+	@pkill -f "samples/fakeapi/main.go" || true
 
 # Docker build
 docker-build:

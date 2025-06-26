@@ -4,84 +4,68 @@
 ![Build](https://github.com/viragtripathi/http-loadgen/actions/workflows/release.yml/badge.svg)
 ![Go Version](https://img.shields.io/badge/go-1.24-blue)
 ![License](https://img.shields.io/github/license/viragtripathi/http-loadgen)
+![Docker Pulls](https://img.shields.io/docker/pulls/virag/http-loadgen)
 
 ![http-loadgen banner](http-loadgen.png)
 
 ---
 
-`http-loadgen` is a high-throughput, configurable **HTTP benchmarking and workload simulation tool**.  
-Use it to load test any read/write API — including permission systems like [Ory Keto](https://www.ory.sh/docs/keto).
+`http-loadgen` is a high-throughput, configurable **HTTP benchmarking and workload simulation tool**. It can test any read/write HTTP API using configurable templates, retry logic, and Prometheus metrics.
 
 ---
 
 ## 🚀 Quick Start
 
 ```bash
-./scripts/run.sh
-````
+./samples/ory/keto/scripts/run.sh
+```
 
-This runs the default benchmark defined in `config/config.yaml`.
+This will launch a sample environment (Keto + HAProxy) and run a default test.
 
 ---
 
 ## 📊 Benchmark Matrix
 
-To run multiple configurations and generate a report:
-
 ```bash
-./scripts/run.sh --benchmark
+./samples/ory/keto/scripts/run.sh --benchmark
 ```
 
-Results are written to:
+Runs a predefined matrix of configurations. Results are saved to:
 
 ```
-benchmark_results.csv
+samples/ory/keto/scripts/benchmark_results.csv
 ```
 
 ---
 
-## 🧪 Example: Test Ory Keto
+## 🧪 Examples
 
-Use this config:
+### 🔐 Ory Keto (permission system)
 
-```yaml
-# api/keto.yaml
-api:
-  write_api: http://localhost:4467
-  read_api: http://localhost:4466
+Sample config: [`samples/ory/keto/config/config.yaml`](samples/ory/keto/config/config.yaml)
 
-requests:
-  write:
-    method: PUT
-    url: "{{ .WriteAPI }}/admin/relation-tuples"
-    headers:
-      Content-Type: application/json
-    body: |
-      {
-        "namespace": "documents",
-        "object": "{{ .object }}",
-        "relation": "viewer",
-        "subject_id": "user:{{ .subject }}"
-      }
-
-  read:
-    method: POST
-    url: "{{ .ReadAPI }}/relation-tuples/check"
-    headers:
-      Content-Type: application/json
-    body: |
-      {
-        "namespace": "documents",
-        "object": "{{ .object }}",
-        "relation": "viewer",
-        "subject_id": "user:{{ .subject }}"
-      }
-```
-
-And run:
+Run:
 
 ```bash
-./http-loadgen --workload-config=./config/config.yaml --log-file=run.log
+./http-loadgen \
+  --workload-config=samples/ory/keto/config/config.yaml \
+  --log-file=run.log
+```
+
+---
+
+### 🧪 Fake API (no dependencies)
+
+Includes a built-in `read`/`write` test server. Start both with:
+
+```bash
+make run-fake
+```
+
+Or dry-run without sending real requests:
+
+```bash
+./http-loadgen --workload-config=samples/fakeapi/config/dry-run.yaml --dry-run
 ```
 
 ---
@@ -89,11 +73,11 @@ And run:
 ## 📁 Folder Layout
 
 ```
-api/              # API-specific configurations (e.g., Keto)
-config/           # Loadgen settings: concurrency, retries, durations
-scripts/          # run.sh and benchmark automation
-internal/         # Core logic: request engine, metrics, generator
 cmd/              # CLI entrypoint (main.go)
+config/           # Example default loadgen config
+samples/          # Test suites: ory/keto, fakeapi, hydra, etc.
+internal/         # Core engine: request execution, metrics, config
+scripts/          # Optional root-level scripts
 ```
 
 ---
@@ -129,39 +113,28 @@ make build
 
 ## 🍎 macOS Gatekeeper (Quarantine) Fix
 
-When downloading the macOS binary (`http-loadgen_darwin_arm64` or `http-loadgen_darwin_amd64`), macOS may block it with this error:
-
-```
-
-"http-loadgen" cannot be opened because the developer cannot be verified.
-
-````
-
-To fix it:
+After downloading a macOS binary, you may need:
 
 ```bash
 xattr -d com.apple.quarantine ./http-loadgen_darwin_arm64
 chmod +x ./http-loadgen_darwin_arm64
 ./http-loadgen_darwin_arm64 --help
-````
+```
 
-Alternatively, allow the app manually via:
-
+Or allow via:
 >  System Settings → Privacy & Security → Allow Anyway
 
 ---
 
 ## 🐳 Docker Usage
 
-Build the image locally:
+### 🔧 Build locally
 
 ```bash
 docker build -t http-loadgen:latest .
 ```
 
----
-
-### 🚀 Run with built-in config (zero setup)
+### 🧪 Run with built-in config
 
 ```bash
 docker run --rm virag/http-loadgen:latest \
@@ -169,11 +142,7 @@ docker run --rm virag/http-loadgen:latest \
   --log-file=/app/run.log
 ```
 
-✅ This works out of the box because the default config is baked into the image at `/app/config/config.yaml`.
-
----
-
-### ⚙️ Override config from local machine
+### ⚙️ Mount local config
 
 ```bash
 docker run --rm \
@@ -183,11 +152,7 @@ docker run --rm \
   --log-file=/app/run.log
 ```
 
-✅ This mounts your local `config/` folder into the container, replacing the default.
-
----
-
-### 🧪 Use dry-run mode to test
+### 🔍 Dry-run mode
 
 ```bash
 docker run --rm virag/http-loadgen:latest \
@@ -197,7 +162,7 @@ docker run --rm virag/http-loadgen:latest \
 
 ---
 
-## 📈 Live Metrics
+## 📈 Prometheus Metrics
 
 Run with:
 
@@ -211,29 +176,30 @@ Then scrape:
 http://localhost:2112/metrics
 ```
 
-Prometheus-compatible metrics include:
+Exposed metrics include:
 
-* `retry_attempts_total`
-* `retry_success_total`
-* `permission_check_total`
-* `retry_duration_seconds`
-
----
-
-## 💡 Why Benchmark APIs Instead of the DB?
-
-This tool mimics real-world client behavior — it:
-
-* Hits live HTTP endpoints
-* Tests retry logic, latency, and concurrency
-* Measures API performance under real query pressure
-
-Not just the raw DB underneath.
+- `retry_attempts_total`
+- `retry_success_total`
+- `permission_check_total`
+- `retry_duration_seconds`
 
 ---
 
-## 📖 References
+## 📖 Why Load Test APIs
 
-* [Ory Keto](https://www.ory.sh/docs/keto)
-* [CockroachDB](https://www.cockroachlabs.com/docs/)
-* [Prometheus](https://prometheus.io/)
+`http-loadgen` tests actual API behavior, not just databases — including:
+
+- Latency
+- Rate limiting
+- Retry behavior
+- API performance under concurrency
+
+It mirrors how real clients behave.
+
+---
+
+## 📚 References
+
+- [Ory Keto](https://www.ory.sh/docs/keto)
+- [CockroachDB](https://www.cockroachlabs.com/docs/)
+- [Prometheus](https://prometheus.io/)

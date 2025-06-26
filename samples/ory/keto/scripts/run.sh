@@ -6,7 +6,7 @@ if [[ "$1" == "--help" ]]; then
   echo "📦 run.sh: Start environment and run load test or benchmark matrix"
   echo ""
   echo "Usage:"
-  echo "  ./scripts/run.sh [--benchmark] [--mode local|cloud]"
+  echo "  ./run.sh [--benchmark] [--mode local|cloud]"
   echo ""
   echo "Options:"
   echo "  --benchmark     Run predefined benchmark matrix"
@@ -44,21 +44,30 @@ if ! command -v timeout >/dev/null 2>&1; then
   fi
 fi
 
+# Determine script directory and project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../../.." && pwd)"
+
 # Optional: used by docker-compose
 if [[ "$MODE" == "cloud" ]]; then
-  export API_CONFIG_PATH=./api/config.cloud.yaml
+  export API_CONFIG_PATH="$SCRIPT_DIR/../api/config.cloud.yaml"
 else
-  export API_CONFIG_PATH=./api/config.local.yaml
+  export API_CONFIG_PATH="$SCRIPT_DIR/../api/config.local.yaml"
 fi
 
-APP_BINARY="./http-loadgen"
-OUTPUT_CSV="./benchmark_results.csv"
+APP_BINARY="$PROJECT_ROOT/http-loadgen"
+OUTPUT_CSV="$SCRIPT_DIR/benchmark_results.csv"
+WORKLOAD_CONFIG="$SCRIPT_DIR/../config/config.yaml"
 
 echo "🧼 Cleaning up old containers..."
-docker-compose down -v --remove-orphans
+docker-compose -f "$SCRIPT_DIR/../docker-compose.yml" \
+               -f "$SCRIPT_DIR/../docker-compose.override.yml" \
+               down -v --remove-orphans
 
 echo "🚀 Starting containers (mode: $MODE)..."
-docker-compose up -d
+docker-compose -f "$SCRIPT_DIR/../docker-compose.yml" \
+               -f "$SCRIPT_DIR/../docker-compose.override.yml" \
+               up -d
 
 echo "⏳ Waiting for environment to stabilize..."
 sleep 5
@@ -67,20 +76,20 @@ if [[ "$BENCHMARK_MODE" == true ]]; then
   echo "📈 Running benchmark matrix..."
   echo "timestamp,duration_sec,concurrency,checks_per_sec,read_ratio,allowed,denied,writes,reads,failed" > "$OUTPUT_CSV"
 
-matrix=(
-  "30 5 500 100"
-  "45 10 1000 100"
-  "60 10 1000 10"
-)
+  matrix=(
+    "30 5 500 100"
+    "45 10 1000 100"
+    "60 10 1000 10"
+  )
 
   for row in "${matrix[@]}"; do
     read -r DURATION CONC CHECKS RATIO <<< "$row"
     echo "🔄 Benchmark: ${DURATION}s, ${CONC} workers, ${CHECKS} checks/sec, ${RATIO}:1"
 
-    LOG="bench_${DURATION}s_${CONC}_${RATIO}.log"
+    LOG="$SCRIPT_DIR/bench_${DURATION}s_${CONC}_${RATIO}.log"
     START=$(date +%s)
 
-    timeout $((DURATION + 30)) bash -c "
+    $TIMEOUT_CMD $((DURATION + 30)) bash -c "
       $APP_BINARY \
         --duration-sec=$DURATION \
         --concurrency=$CONC \
@@ -91,7 +100,7 @@ matrix=(
         --max-open-conns=200 \
         --max-idle-conns=200 \
         --request-timeout=10 \
-        --workload-config=./config/config.yaml \
+        --workload-config=$WORKLOAD_CONFIG \
         --log-file=$LOG \
         --verbose=false
     "
@@ -129,8 +138,8 @@ else
     --max-open-conns=100 \
     --max-idle-conns=100 \
     --request-timeout=10 \
-    --workload-config=./config/config.yaml \
-    --log-file=run.log \
+    --workload-config=$WORKLOAD_CONFIG \
+    --log-file=$SCRIPT_DIR/run.log \
     --verbose=false
 
   echo "✅ Workload completed. See run.log for details."
